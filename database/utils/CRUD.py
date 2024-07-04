@@ -1,9 +1,8 @@
 from typing import Dict, List, TypeVar
 from peewee import ModelSelect
-from database.common.models import ModelBase
-from ..common.models import db
+from database.common.models import ModelBase, db
 
-T = TypeVar('T')
+T = TypeVar("T")
 
 
 def _store_data(db: db, model: T, *data: List[Dict]) -> None:
@@ -28,7 +27,5 @@ class CRUDInterface:
         return _retrieve_all_data
 
 
-if __name__ == '__main__':
-    _store_data()
-    _retrieve_all_data()
+if __name__ == "__main__":
     CRUDInterface()

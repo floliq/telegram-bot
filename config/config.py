@@ -1,7 +1,13 @@
-from dotenv import load_dotenv
 import os
+from dotenv import load_dotenv
+from pydantic import SecretStr, StrictStr
+from pydantic_settings import BaseSettings
 
 load_dotenv()
-BOT_TOKEN = os.getenv("BOT_TOKEN")
-BASE_URL = os.getenv("BASE_URL")
-API_KEY = os.getenv("API_KEY")
+
+
+class Settings(BaseSettings):
+
+    api_key: SecretStr = os.getenv("API_KEY", None)
+    host_api: StrictStr = os.getenv("BASE_URL", None)
+    bot_token: SecretStr = os.getenv("BOT_TOKEN", None)
