@@ -1,13 +1,13 @@
 from datetime import datetime
 import peewee as pw
 
-db = pw.SqliteDatabase('database.db')
+db = pw.SqliteDatabase("database.db")
 
 
 class ModelBase(pw.Model):
     created_at = pw.DateField(default=datetime.now())
 
-    class Meta():
+    class Meta:
         database = db
 
 

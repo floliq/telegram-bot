@@ -6,5 +6,5 @@ db.connect()
 db.create_tables([History])
 crud = CRUDInterface()
 
-if __name__ == 'main':
+if __name__ == "__main__":
     crud()
