@@ -43,6 +43,48 @@ def _best_city_hotels(
     return response
 
 
+def _info_hotel(
+    method: str,
+    url: str,
+    headers: Dict,
+    params: Dict,
+    timeout: int,
+    success=200,
+    func=_make_responce,
+):
+    url = "{}/v1/hotels/data".format(url)
+    response = func(method, url, headers=headers, params=params, timeout=timeout)
+    return response
+
+
+def _hotel_photos(
+    method: str,
+    url: str,
+    headers: Dict,
+    params: Dict,
+    timeout: int,
+    success=200,
+    func=_make_responce,
+):
+    url = "{}/v1/hotels/photos".format(url)
+    response = func(method, url, headers=headers, params=params, timeout=timeout)
+    return response
+
+
+def _hotel_desc(
+    method: str,
+    url: str,
+    headers: Dict,
+    params: Dict,
+    timeout: int,
+    success=200,
+    func=_make_responce,
+):
+    url = "{}/v1/hotels/description".format(url)
+    response = func(method, url, headers=headers, params=params, timeout=timeout)
+    return response
+
+
 class APIInterface:
 
     @staticmethod
@@ -53,9 +95,24 @@ class APIInterface:
     def get_best_hotel():
         return _best_city_hotels
 
+    @staticmethod
+    def get_hotel_info():
+        return _info_hotel
+
+    @staticmethod
+    def get_hotel_photo():
+        return _hotel_photos
+
+    @staticmethod
+    def get_hotel_desc():
+        return _hotel_desc
+
 
 if __name__ == "__main__":
     _make_responce()
     _search_location()
     _best_city_hotels()
+    _info_hotel()
+    _hotel_photos()
+    _hotel_desc()
     APIInterface()
