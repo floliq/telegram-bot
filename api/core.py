@@ -7,9 +7,7 @@ headers = {
     "x-rapidapi-key": settings.api_key.get_secret_value(),
     "x-rapidapi-host": settings.host_api,
 }
-
 url = "https://" + settings.host_api
-
 
 api = APIInterface()
 

@@ -7,10 +7,10 @@ city = input("Enter the city: ")
 params = {"name": city, "locale": "en-gb"}
 find_city = api.get_location()
 
-
 response = find_city("GET", url, headers, params, 5)
 response = response.json()
 city_id = response[0]["dest_id"]
+
 find_hotels = api.get_best_hotel()
 params = {
     "checkout_date": "2024-09-15",
@@ -37,7 +37,6 @@ response = find_hotels(
 response = response.json()
 for hotel in response['result']:
     print(hotel['hotel_name_trans'], hotel['review_score'])
-
 
 # from telebot.types import ReplyKeyboardMarkup, KeyboardButton, ReplyKeyboardRemove
 # from telebot.types import InlineKeyboardMarkup, InlineKeyboardButton
