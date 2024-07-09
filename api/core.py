@@ -25,15 +25,19 @@ def get_location_ides(city: str):
         locations[location["dest_id"]] = location["label"]
     return locations
 
-
-def get_hotels(dest_id):
+# def get_hotels(dest_id, adults_count: int, checkin, checkout, filter_mode: str = 'popularity'):
+def get_hotels(dest_id, filter_mode: str = 'popularity'):
     """
     Получения наиболее популярных отелей
+    popularity - наиболее популярные
+    distance - расстояние от центра города
+    price - цена
     """
     find_hotels = api.get_best_hotel()
     params = {
         "checkout_date": "2024-09-15",
-        "order_by": "popularity",
+        # "checkout_date": checkout,
+        "order_by": filter_mode,
         "filter_by_currency": "AED",
         "include_adjacency": "true",
         "categories_filter_ids": "class::2,class::4,free_cancellation::1",
@@ -43,6 +47,7 @@ def get_hotels(dest_id):
         "adults_number": "2",
         "page_number": "0",
         "checkin_date": "2024-09-14",
+        # "checkin_date": checkin,
         "locale": "en-gb",
         "units": "metric",
     }
@@ -63,8 +68,9 @@ def hotel_info(dest_id):
     name = response["name"]
     link = response["url"]
     address = response["address"]
+    min_price = response["min_total_price"]
     location = [locate for locate in response["location"].values()]
-    return name, link, address, location
+    return name, link, address, min_price, location
 
 
 def hotel_photos(dest_id):
@@ -94,10 +100,10 @@ def get_all_hotel_info(dest_id):
     """
     Получение полной информации об отеле
     """
-    name, link, address, location = hotel_info(dest_id)
+    name, link, address, min_price, location = hotel_info(dest_id)
     photos = hotel_photos(dest_id)
     desc = hotel_desc(dest_id)
-    return name, link, address, location, photos, desc
+    return name, link, address, min_price, location, photos, desc
 
 
 if __name__ == "__main__":
