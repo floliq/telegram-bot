@@ -1,4 +1,4 @@
-from database.common.models import DoesNotExist
+
 from database.common.models import db, User, History
 from tg_api.common.bot_init import bot
 from bot_api.core import *
@@ -6,6 +6,7 @@ from database.core import crud
 
 db_write = crud.create()
 db_read = crud.retrieve()
+check_exists_data = crud.check_exists()
 
 
 @bot.message_handler(commands=["start", "help"])
@@ -15,11 +16,8 @@ def send_welcome(message: Message):
     :param message:
     :return:
     """
-    # if not check_user_in_db(message):
-    #     add_user_to_db(message)
-    # try:
-    #     crud.check_if_data_exists(db, User, User.chat_id=message.chat_id)
-    # except User.DoesNotExist
+    if not check_exists_data(db, User, User.chat_id==message.chat.id):
+        db_write(db, User, {"chat_id": message.chat.id, "action": 1})
     # action = user.action
     # if not user:
     #     db_write(db, User, {"chat_id": message.chat.id})

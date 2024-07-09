@@ -39,7 +39,7 @@ class CRUDInterface:
         return _retrieve_all_data
 
     @staticmethod
-    def check_if_data_exists():
+    def check_exists():
         return _check_if_data_exists
 
 if __name__ == "__main__":
