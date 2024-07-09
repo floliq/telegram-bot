@@ -1,4 +1,4 @@
-from typing import Dict, List, TypeVar
+from typing import Dict, List, TypeVar, Any
 from peewee import ModelSelect
 from database.common.models import ModelBase, db
 
@@ -16,6 +16,18 @@ def _retrieve_all_data(db: db, model: T, *columns: ModelBase) -> ModelSelect:
     return response
 
 
+def _check_if_data_exists(sdb: db, model: T, *query: Any, **filters: Any) -> bool:
+    exists = True
+    try:
+        with sdb.atomic():
+            instance = model.get_or_none(*query, **filters)
+            if instance is None:
+                exists = False
+    except model.DoesNotExist:
+        exists = False
+    return exists
+
+
 class CRUDInterface:
 
     @staticmethod
@@ -26,6 +38,9 @@ class CRUDInterface:
     def retrieve():
         return _retrieve_all_data
 
+    @staticmethod
+    def check_if_data_exists():
+        return _check_if_data_exists
 
 if __name__ == "__main__":
     CRUDInterface()
