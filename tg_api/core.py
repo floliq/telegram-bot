@@ -7,6 +7,8 @@ from database.core import crud
 db_write = crud.create()
 db_read = crud.retrieve()
 check_exists_data = crud.check_exists()
+update_action = crud.update_row()
+get_action = crud.retrieve_row()
 
 
 @bot.message_handler(commands=["start", "help"])
@@ -16,30 +18,28 @@ def send_welcome(message: Message):
     :param message:
     :return:
     """
-    if not check_exists_data(db, User, User.chat_id==message.chat.id):
+    if not check_exists_data(db, User, User.chat_id == message.chat.id):
         db_write(db, User, {"chat_id": message.chat.id, "action": 1})
-    # action = user.action
-    # if not user:
-    #     db_write(db, User, {"chat_id": message.chat.id})
-
+    else:
+        update_action(db, User, User.chat_id == message.chat.id, {"action": 1}) #если есть id - INSERT, нет - UPDATE
     if "start" in message.text:
         bot.send_message(
             message.chat.id,
             "Приветствую в боте по поиску отелей. Для начала введите, пожалуйста, город поиска ниже:",
         )
-        # flag = "enter_city"
 
 
-# @bot.message_handler(content_types=["text"])
-# def send_buttons(message: Message):
-
-    # if flag == "enter_city":
-    #     city = message.text
-    #     bot.send_message(
-    #         message.chat.id,
-    #         f"Вы выбрали город: {city}. Уточните локацию пожалуйста:",
-    #         reply_markup=exact_location_keygen(city),
-    #     )
+@bot.message_handler(content_types=["text"])
+def send_buttons(message: Message):
+    user = User.get(message.chat.id == User.chat_id)
+    action = user.action # ПОЛУЧАЕТ ACTION по id
+    if action == 1:
+        city = message.text
+        bot.send_message(
+            message.chat.id,
+            f"Вы выбрали город: {city}. Уточните локацию пожалуйста:",
+            reply_markup=exact_location_keygen(city),
+        )
 
 
 @bot.callback_query_handler(func=lambda call: True)
