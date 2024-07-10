@@ -19,7 +19,6 @@ def get_location_ides(city: str):
     find_city = api.get_location()
     params = {"name": city, "locale": "en-gb"}
     response = find_city("GET", url, headers, params, 5).json()
-    print(response)
     locations = dict()
     for location in response:
         locations[location["dest_id"]] = location["label"]
@@ -52,8 +51,10 @@ def get_hotels(dest_id, filter_mode: str = 'popularity'):
         "units": "metric",
     }
     response = find_hotels("GET", url, headers, params, 5)
+    print(response)
     response = response.json()
-    hotels = [hotel["hotel_name_trans"] for hotel in response["result"]]
+    # hotels = [hotel["hotel_name_trans"] for hotel in response["result"]]
+    hotels = [hotel["hotel_id"] for hotel in response["result"]]
     return hotels
 
 

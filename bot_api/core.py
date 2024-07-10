@@ -1,4 +1,4 @@
-from api.core import api, url, headers, get_location_ides, get_hotels
+from api.core import api, url, headers, get_location_ides, get_all_hotel_info, get_hotels
 from telebot.types import (
     Message,
     CallbackQuery,
@@ -16,11 +16,27 @@ def exact_location_keygen(city):
     return keyboard
 
 
-def hotel_card_keygen(dest_id):
+def hotel_card_keygen(list_of_data, n, count=1, flag_step="card", flag_buy="b", flag_add="a"):
     keyboard = InlineKeyboardMarkup()
-    hotels = get_hotels(dest_id)
-    for hotel in hotels:
-        keyboard.add(InlineKeyboardButton(text=hotel, callback_data="hotel"))
+    # keyboard.row(
+    #     InlineKeyboardButton(text="Назад", callback_data="back"),
+    #     InlineKeyboardButton(text="Забронировать", callback_data="order"),
+    #     InlineKeyboardButton(text="Вперёд", callback_data="next")
+    # )
+    keyboard.add(InlineKeyboardButton(text="Забронировать", callback_data="order"))
+    if n == 0 and len(list_of_data) > (n + 1):
+        keyboard.add(InlineKeyboardButton("Вперёд ➡️", callback_data=flag_step + str(n + 1)))
+    elif n == len(list_of_data) - 1:
+        keyboard.add(InlineKeyboardButton("⬅️ Назад", callback_data=flag_step + str(n - 1)))
+    else:
+        keyboard.row(
+            InlineKeyboardButton("⬅️ Назад", callback_data=flag_step + str(n - 1)),
+            InlineKeyboardButton("Вперёд ➡️", callback_data=flag_step + str(n + 1))
+        )
+    #
+    # hotels_info = get_all_hotel_info(hotel_id)
+    # for hotel in hotels_info:
+    #     keyboard.add(InlineKeyboardButton(text=hotel, callback_data="hotel"))
 
     return keyboard
 

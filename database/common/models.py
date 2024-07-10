@@ -17,7 +17,7 @@ class User(ModelBase):
     action = pw.IntegerField(default='0')
     # currency = pw.CharField(max_length=5)
     # order = pw.CharField(max_length=255)
-    # destination_id = pw.CharField(max_length=255)
+    destination_id = pw.CharField(max_length=255, default='')
     # destination_name = pw.CharField(max_length=255)
     # date_from = pw.CharField(max_length=255)
     # date_to = pw.CharField(max_length=255)

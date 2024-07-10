@@ -13,7 +13,7 @@ def _store_data(db: db, model: T, *data: List[Dict]) -> None:
 def _retrieve_all_data(db: db, model: T, *columns: ModelBase) -> ModelSelect:
     with db.atomic():
         response = model.select(*columns)
-    return responseW
+    return response
 
 
 def _updating_row(db: db, model: T, condition: ModelBase, *data: List[Dict]) -> None:
