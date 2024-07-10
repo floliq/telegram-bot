@@ -63,6 +63,8 @@ def send_buttons(message: Message):
         update(db, User, User.chat_id == message.chat.id, {"action": 6})  # изменяет action в БД
     elif action == 6:
         city_id = user.destination_id
+        # data = get_hotels(-553173) # берет отели и его цены
+        # print(get_all_hotel_info(77634, data)) передаем id и цены, получаем всю  инфу
         hotels = get_hotels(city_id)
         list_of_data = [get_all_hotel_info(hotel_id) for hotel_id in hotels]
         first_hotel = list_of_data[0]
