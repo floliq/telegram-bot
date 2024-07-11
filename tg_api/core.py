@@ -1,3 +1,7 @@
+import json
+
+from telebot import types
+
 from database.common.models import db, User, History
 from tg_api.common.bot_init import bot
 from bot_api.core import *
@@ -46,16 +50,24 @@ def send_buttons(message: Message):
             message.chat.id,
             f"Вы выбрали дату заезда: {date_in}. Выберите дату выезда:"
         )
-        update(db, User, User.chat_id == message.chat.id, {"action": 4})  # изменяет action в БД
+        update(db, User, User.chat_id == message.chat.id, {"action": 4, "date_in":date_in})  # изменяет action в БД
     elif action == 4:
         date_out = message.text
         bot.send_message(
             message.chat.id,
             "Введите диапазон цен в формате *цена от-*цена до",
         )
-        update(db, User, User.chat_id == message.chat.id, {"action": 5})  # изменяет action в БД
+        update(db, User, User.chat_id == message.chat.id, {"action": 5, "date_out":date_out})  # изменяет action в БД
     elif action == 5:
-        min_price, max_price = map(int, message.text.split("-"))
+        try:
+            min_price, max_price = map(int, message.text.split("-"))
+        except ValueError:
+            bot.send_message(
+                message.chat.id,
+                "Введенные данные не являются диапазоном цен. Пожалуйста, введите цены в формате *цена от-*цена до"
+            )
+            return
+
         bot.send_message(
             message.chat.id,
             "Введите количество человек в группе:"
@@ -63,30 +75,48 @@ def send_buttons(message: Message):
         update(db, User, User.chat_id == message.chat.id, {"action": 6})  # изменяет action в БД
     elif action == 6:
         city_id = user.destination_id
-        # data = get_hotels(-553173) # берет отели и его цены
-        # print(get_all_hotel_info(77634, data)) передаем id и цены, получаем всю  инфу
         hotels = get_hotels(city_id)
-        list_of_data = [get_all_hotel_info(hotel_id) for hotel_id in hotels]
-        first_hotel = list_of_data[0]
-        print(first_hotel)
-        # bot.send_photo(
-        #     message.chat.id,
-        #     "",
-        #     # "Список предложенных отелей согласно вашему запросу:",
-        #     reply_markup=hotel_card_keygen(list_of_data, 0),  # Генерирует карточки отелей согласно вашему запросу
-        # )
-
-    # elif action == 6:
+        db_write(db, History, {"event": "hotels", "search_result": json.dumps(hotels)})
+        hotel = hotels[0]
+        # for hotel in hotels:
+        #     print(hotel)
+        # print(first_hotel)
+        keyboard = hotel_card_keygen(hotels, 0)
+        bot.send_photo(
+            message.chat.id,
+            photo=hotel["photo"],
+            caption=f"Название отеля: {hotel["title"]}\n"
+                    f"Ссылка на бронирование: {hotel["url"]}\n"
+                    f"Описание: {hotel["description"]}\n"
+                    f"Цена: {hotel["price"]}\n"
+                    f"Выбранные даты - въезд: {user.date_in}, выезд: {user.date_out}\n"
+                    f"Коодринаты: {hotel["coordinates"][0], hotel["coordinates"][1]}",
+            reply_markup=keyboard,  # Генерирует карточки отелей согласно вашему запросу
+        )
 
 
 @bot.callback_query_handler(func=lambda call: True)
 def query_handler(call):
     if call.data.startswith("loc"):
-        city_id = call.data.replace("log", '')
+        city_id = call.data.replace("loc", '')
+        db_write(db, History, {"event": "location", "search_result": city_id})
         update(db, User, User.chat_id == call.message.chat.id, {"action": 3, "destination_id": city_id})
         bot.send_message(call.message.chat.id, "Введите желаемую дату заезда: ")
-        # bot.send_message(
-        #     call.message.chat.id,
-        #     f"Отели в выбранном городе:",
-        #     reply_markup=hotel_card_keygen(city_id),
-        # )
+    if call.data.startswith("card"):
+        user = User.get(User.chat_id == call.message.chat.id)
+        hotels = json.loads(db_read(db, History, History.event == "hotels", History.search_result).first().search_result)
+        number = int(call.data.replace("card", ''))
+        hotel = hotels[number]
+        keyboard = hotel_card_keygen(hotels, number)
+        bot.edit_message_media(message_id=call.message.message_id,
+                               chat_id=call.message.chat.id,
+                               media=types.InputMediaPhoto(hotel["photo"]))
+        bot.edit_message_caption(message_id=call.message.message_id,
+                                 chat_id=call.message.chat.id,
+                                 caption=f"Название отеля: {hotel["title"]}\n"
+                                         f"Ссылка на бронирование: {hotel["url"]}\n"
+                                         f"Описание: {hotel["description"]}\n"
+                                         f"Цена: {hotel["price"]}\n"
+                                         f"Выбранные даты - въезд: {user.date_in}, выезд: {user.date_out}\n"
+                                         f"Коодринаты: {hotel["coordinates"][0], hotel["coordinates"][1]}",
+                                 reply_markup=keyboard)
