@@ -51,5 +51,6 @@ class CRUDInterface:
     def update_row():
         return _updating_row
 
+
 if __name__ == "__main__":
     CRUDInterface()
