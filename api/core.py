@@ -17,16 +17,16 @@ def get_location_ides(city: str):
     Получение городов
     """
     find_city = api.get_location()
-    params = {"name": city, "locale": "en-gb"}
+    params = {"name": city, "locale": "ru"}
     response = find_city("GET", url, headers, params, 5).json()
-    print(response)
     locations = dict()
     for location in response:
         locations[location["dest_id"]] = location["label"]
     return locations
 
+
 # def get_hotels(dest_id, adults_count: int, checkin, checkout, filter_mode: str = 'popularity'):
-def get_hotels(dest_id, filter_mode: str = 'popularity'):
+def get_hotels(dest_id, filter_mode: str = "popularity"):
     """
     Получения наиболее популярных отелей
     popularity - наиболее популярные
@@ -38,7 +38,7 @@ def get_hotels(dest_id, filter_mode: str = 'popularity'):
         "checkout_date": "2024-09-15",
         # "checkout_date": checkout,
         "order_by": filter_mode,
-        "filter_by_currency": "AED",
+        "filter_by_currency": "USD",
         "include_adjacency": "true",
         "categories_filter_ids": "class::2,class::4,free_cancellation::1",
         "room_number": "1",
@@ -48,12 +48,29 @@ def get_hotels(dest_id, filter_mode: str = 'popularity'):
         "page_number": "0",
         "checkin_date": "2024-09-14",
         # "checkin_date": checkin,
-        "locale": "en-gb",
+        "locale": "ru",
         "units": "metric",
     }
-    response = find_hotels("GET", url, headers, params, 5)
-    response = response.json()
-    hotels = [hotel["hotel_name_trans"] for hotel in response["result"]]
+    response = find_hotels("GET", url, headers, params, 20)
+    response = response.json()["result"]
+    # print(response)
+    hotels = []
+    for hotel in response:
+        hotels.append(
+            {
+                "id": hotel["hotel_id"],
+                "title": hotel["hotel_name_trans"],
+                "url": hotel["url"],
+                "description": hotel_desc(hotel["hotel_id"]),
+                "price": round(float(hotel["min_total_price"]), 2),
+                "photo": hotel["main_photo_url"],
+                "address": hotel["address_trans"],
+                "distance_to_cc": hotel["distance_to_cc"],
+                "coordinates": [hotel["latitude"], hotel["longitude"]],
+            }
+        )
+    # hotels = [hotel["hotel_name_trans"] for hotel in response["result"]]
+    # hotels = {hotel["hotel_id"]: round(float(hotel["min_total_price"]), 2) for hotel in response["result"]}
     return hotels
 
 
@@ -62,15 +79,14 @@ def hotel_info(dest_id):
     Получение названия, ссылки, адреса и локации отеля
     """
     info_hotel = api.get_hotel_info()
-    params = {"hotel_id": dest_id, "locale": "en-gb"}
+    params = {"hotel_id": dest_id, "locale": "ru"}
     response = info_hotel("GET", url, headers, params, 5)
     response = response.json()
     name = response["name"]
     link = response["url"]
     address = response["address"]
-    min_price = response["min_total_price"]
     location = [locate for locate in response["location"].values()]
-    return name, link, address, min_price, location
+    return name, link, address, location
 
 
 def hotel_photos(dest_id):
@@ -78,32 +94,33 @@ def hotel_photos(dest_id):
     Получение фотографий отеля
     """
     photos_hotel = api.get_hotel_photo()
-    params = {"hotel_id": dest_id, "locale": "en-gb"}
+    params = {"hotel_id": dest_id, "locale": "ru"}
     response = photos_hotel("GET", url, headers, params, 5)
     response = response.json()
     photos_urls = [pic["url_max"] for pic in response]
     return photos_urls
 
 
-def hotel_desc(dest_id):
+def hotel_desc(hotel_id):
     """
     Получение описания отеля
     """
     desc_hotel = api.get_hotel_desc()
-    params = {"hotel_id": dest_id, "locale": "en-gb"}
-    response = desc_hotel("GET", url, headers, params, 5)
+    params = {"hotel_id": hotel_id, "locale": "ru"}
+    response = desc_hotel("GET", url, headers, params, 10)
     response = response.json()
     return response["description"]
 
 
-def get_all_hotel_info(dest_id):
+def get_all_hotel_info(hotel_id, data):
     """
     Получение полной информации об отеле
     """
-    name, link, address, min_price, location = hotel_info(dest_id)
-    photos = hotel_photos(dest_id)
-    desc = hotel_desc(dest_id)
-    return name, link, address, min_price, location, photos, desc
+    name, link, address, location = hotel_info(hotel_id)
+    min_price = data[hotel_id]
+    photos = hotel_photos(hotel_id)
+    desc = hotel_desc(hotel_id)
+    return name, link, address, location, min_price, photos, desc
 
 
 if __name__ == "__main__":
@@ -114,3 +131,4 @@ if __name__ == "__main__":
     hotel_photos()
     hotel_desc()
     get_all_hotel_info()
+
