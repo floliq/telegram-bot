@@ -16,7 +16,7 @@ class User(ModelBase):
     chat_id = pw.BigIntegerField(unique=True)
     action = pw.IntegerField(default=0)
     # currency = pw.CharField(max_length=5)
-    # order = pw.CharField(max_length=255)
+    order = pw.CharField(max_length=255, default="")
     destination_id = pw.CharField(max_length=255, default="")
     date_in = pw.CharField(max_length=255, default="")
     date_out = pw.CharField(max_length=255, default="")

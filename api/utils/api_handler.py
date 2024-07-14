@@ -2,9 +2,16 @@ import requests
 from typing import Dict
 
 
-def _make_responce(
-    method: str, url: str, headers: Dict, params: Dict, timeout: int, success=200
+def _make_response(
+    # keyword: str,
+    method: str,
+    url: str,
+    headers: Dict,
+    params: Dict,
+    timeout: int,
+    success=200
 ):
+    # url = ("{}/v1/hotels/"+keyword).format(url)
     response = requests.request(
         method, url, headers=headers, params=params, timeout=timeout
     )
@@ -15,6 +22,8 @@ def _make_responce(
     return status_code
 
 
+
+
 def _search_location(
     method: str,
     url: str,
@@ -22,7 +31,7 @@ def _search_location(
     params: Dict,
     timeout: int,
     success=200,
-    func=_make_responce,
+    func=_make_response,
 ):
     url = "{}/v1/hotels/locations".format(url)
     response = func(method, url, headers=headers, params=params, timeout=timeout)
@@ -36,7 +45,7 @@ def _best_city_hotels(
     params: Dict,
     timeout: int,
     success=200,
-    func=_make_responce,
+    func=_make_response,
 ):
     url = "{}/v1/hotels/search".format(url)
     response = func(method, url, headers=headers, params=params, timeout=timeout)
@@ -50,7 +59,7 @@ def _info_hotel(
     params: Dict,
     timeout: int,
     success=200,
-    func=_make_responce,
+    func=_make_response,
 ):
     url = "{}/v1/hotels/data".format(url)
     response = func(method, url, headers=headers, params=params, timeout=timeout)
@@ -64,7 +73,7 @@ def _hotel_photos(
     params: Dict,
     timeout: int,
     success=200,
-    func=_make_responce,
+    func=_make_response,
 ):
     url = "{}/v1/hotels/photos".format(url)
     response = func(method, url, headers=headers, params=params, timeout=timeout)
@@ -78,7 +87,7 @@ def _hotel_desc(
     params: Dict,
     timeout: int,
     success=200,
-    func=_make_responce,
+    func=_make_response,
 ):
     url = "{}/v1/hotels/description".format(url)
     response = func(method, url, headers=headers, params=params, timeout=timeout)
@@ -87,6 +96,9 @@ def _hotel_desc(
 
 class APIInterface:
 
+    @staticmethod
+    def make_response():
+        return _make_response
     @staticmethod
     def get_location():
         return _search_location
@@ -109,7 +121,7 @@ class APIInterface:
 
 
 if __name__ == "__main__":
-    _make_responce()
+    _make_response()
     _search_location()
     _best_city_hotels()
     _info_hotel()
