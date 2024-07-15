@@ -23,21 +23,21 @@ def exact_location_keygen(cities):
 
 
 #
-def hotel_card_keygen(list_of_data: List[Dict], list_of_photos: List, card_index: int = 0, photo_index: int = 0):
+def hotel_card_keygen(list_of_data: List[Dict], list_of_photos: List, url: str, card_index: int = 0, photo_index: int = 0):
     keyboard = InlineKeyboardMarkup()
-    keyboard.add(InlineKeyboardButton(text="Забронировать", callback_data="order"))
+    keyboard.add(InlineKeyboardButton(text="Забронировать", url=url))
     if photo_index == 0 and len(list_of_photos) > (photo_index + 1):
         keyboard.add(
             InlineKeyboardButton("Следующее фото ➡️", callback_data='photo{}_{}'.format(photo_index+1, card_index))
         )
     elif photo_index == len(list_of_data) - 1:
         keyboard.add(
-            InlineKeyboardButton("⬅️ Предыдущее фото", callback_data="photo" + str(photo_index - 1))
+            InlineKeyboardButton("⬅️ Предыдущее фото", callback_data='photo{}_{}'.format(photo_index-1, card_index))
         )
     else:
         keyboard.row(
-            InlineKeyboardButton("⬅️ Предыдущее фото", callback_data="photo" + str(photo_index - 1)),
-            InlineKeyboardButton("Следующее фото ➡️", callback_data="photo" + str(photo_index + 1)),
+            InlineKeyboardButton("⬅️ Предыдущее фото", callback_data='photo{}_{}'.format(photo_index-1, card_index)),
+            InlineKeyboardButton("Следующее фото ➡️", callback_data='photo{}_{}'.format(photo_index+1, card_index)),
         )
     if card_index == 0 and len(list_of_data) > (card_index + 1):
         keyboard.add(

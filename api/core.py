@@ -19,15 +19,14 @@ def get_location_ids(city: str):
     find_city = api.get_location()
     params = {"name": city, "locale": "ru"}
     # "locations",
-    response = find_city("GET", url, headers, params, 5).json()
+    response = find_city("GET", url, headers, params, 3).json()
     locations = dict()
     for location in response:
         locations[location["dest_id"]] = location["label"]
     return locations
 
 
-# def get_hotels(dest_id, adults_count: int, checkin, checkout, filter_mode: str = 'popularity'):
-def get_hotels(dest_id, filter_mode: str = "popularity"):
+def get_hotels(dest_id, checkin, checkout, person_count, filter_mode: str = "popularity"):
     """
     Получения наиболее популярных отелей
     popularity - наиболее популярные
@@ -36,8 +35,7 @@ def get_hotels(dest_id, filter_mode: str = "popularity"):
     """
     find_hotels = api.get_best_hotel()
     params = {
-        "checkout_date": "2024-09-15",
-        # "checkout_date": checkout,
+        "checkout_date": checkout,
         "order_by": filter_mode,
         "filter_by_currency": "USD",
         "include_adjacency": "true",
@@ -45,14 +43,14 @@ def get_hotels(dest_id, filter_mode: str = "popularity"):
         "room_number": "1",
         "dest_id": dest_id,
         "dest_type": "city",
-        "adults_number": "2",
+        "adults_number": person_count,
         "page_number": "0",
-        "checkin_date": "2024-09-14",
-        # "checkin_date": checkin,
+        "checkin_date": checkin,
         "locale": "ru",
         "units": "metric",
     }
-    response = find_hotels("GET", url, headers, params, 20)
+    print(params)
+    response = find_hotels("GET", url, headers, params, 5)
     response = response.json()["result"]
     # print(response)
     hotels = []
@@ -65,7 +63,6 @@ def get_hotels(dest_id, filter_mode: str = "popularity"):
                 "description": hotel_desc(hotel["hotel_id"]),
                 "price": round(float(hotel["min_total_price"]), 2),
                 "photos": hotel_photos(hotel["hotel_id"]),
-                # "photo": hotel["main_photo_url"],
                 "address": hotel["address_trans"],
                 "distance_to_cc": hotel["distance_to_cc"],
                 "coordinates": [hotel["latitude"], hotel["longitude"]],
@@ -92,7 +89,7 @@ def hotel_desc(hotel_id):
     """
     desc_hotel = api.get_hotel_desc()
     params = {"hotel_id": hotel_id, "locale": "ru"}
-    response = desc_hotel("GET", url, headers, params, 10)
+    response = desc_hotel("GET", url, headers, params, 3)
     response = response.json()
     return response["description"]
 
