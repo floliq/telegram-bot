@@ -1,3 +1,5 @@
+from typing import Tuple
+
 from config.config import Settings
 from api.utils.api_handler import APIInterface
 
@@ -26,7 +28,7 @@ def get_location_ids(city: str):
     return locations
 
 
-def get_hotels(dest_id, checkin, checkout, person_count, filter_mode: str = "popularity"):
+def get_hotels(dest_id, checkin, checkout, person_count, limits: Tuple[int,int], filter_mode: str = "popularity" ):
     """
     Получения наиболее популярных отелей
     popularity - наиболее популярные
@@ -68,6 +70,8 @@ def get_hotels(dest_id, checkin, checkout, person_count, filter_mode: str = "pop
                 "coordinates": [hotel["latitude"], hotel["longitude"]],
             }
         )
+    min_price, max_price = limits
+    hotels = [hotel for hotel in hotels if min_price<hotel["price"]<max_price]
     return hotels
 
 

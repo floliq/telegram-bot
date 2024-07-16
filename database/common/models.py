@@ -14,14 +14,14 @@ class ModelBase(pw.Model):
 
 class User(ModelBase):
     chat_id = pw.BigIntegerField(unique=True)
-    action = pw.IntegerField(default=0)
-    # currency = pw.CharField(max_length=5)
+    action = pw.IntegerField(null=True)
     order = pw.CharField(max_length=255, null=True)
     destination_id = pw.CharField(max_length=255, null=True)
     date_in = pw.DateField(null=True)
     date_out = pw.DateField(null=True)
     person_count = pw.IntegerField(default=1)
-    # destination_name = pw.CharField(max_length=255)
+    min_price = pw.IntegerField(null=True)
+    max_price = pw.IntegerField(null=True)
 
 
 class History(ModelBase):

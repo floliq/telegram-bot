@@ -1,10 +1,9 @@
 import json
-
-from telebot import types
+from telebot.types import Message, InputMediaPhoto
 from telegram_bot_calendar import DetailedTelegramCalendar, LSTEP
 import datetime
 
-from api.core import get_location_ids, hotel_photos
+from api.core import get_location_ids, hotel_photos, get_hotels
 from database.common.models import db, User, History
 from tg_api.common.bot_init import bot
 from bot_api.core import *
@@ -84,6 +83,7 @@ def send_buttons(message: Message):
             if min_price > max_price:
                 bot.send_message(message.chat.id, "Пожалуйста, введите цены в правильном порядке.")
                 return
+
         except ValueError:
             bot.send_message(
                 message.chat.id,
@@ -93,7 +93,7 @@ def send_buttons(message: Message):
 
         bot.send_message(message.chat.id, "Введите количество человек в группе:")
         update(
-            db, User, User.chat_id == message.chat.id, {"action": 6}
+            db, User, User.chat_id == message.chat.id, {"action": 6, "min_price": min_price, "max_price": max_price}
         )  # изменяет action в БД
     elif action == 6:
         try:
@@ -110,11 +110,15 @@ def send_buttons(message: Message):
             return
 
         bot.send_message(message.chat.id, "Подождите! Идет поиск гостиниц.....")
-        city_id = user.destination_id
-        print(user.person_count)
-        hotels = get_hotels(city_id, user.date_in, user.date_out, user.person_count, user.order)
+        hotels = get_hotels(
+            user.destination_id,
+            user.date_in, user.date_out,
+            user.person_count,
+            (user.min_price, user.max_price),
+            user.order
+        )
         if not hotels:
-            bot.send_message(message.chat.id, "На найдены гостиницы, введите /start чтобы начать поиск заново")
+            bot.send_message(message.chat.id, "Не найдены гостиницы, введите /start, чтобы начать поиск заново")
             return
         db_write(db, History, {"user_id": user, "event": "hotels", "search_result": json.dumps(hotels)})
         hotel = hotels[0]
@@ -163,20 +167,20 @@ def query_handler(call):
             reply_markup=calendar,
         )
     if call.data.startswith("cbcal"):
-        result, key, step = DetailedTelegramCalendar(
-            calendar_id=action,
-            locale="ru",
-            min_date=date_limit,
-            max_date=date_limit + datetime.timedelta(days=365 * 2)).process(call.data)
-        if not result and key:
-            bot.edit_message_text(
-                f"Выберите {LSTEP[step]}",
-                call.message.chat.id,
-                call.message.message_id,
-                reply_markup=key,
-            )
-        elif result:
-            if action == 3:
+        if action == 3:
+            result, key, step = DetailedTelegramCalendar(
+                calendar_id=action,
+                locale="ru",
+                min_date=date_limit,
+                max_date=date_limit + datetime.timedelta(days=365 * 2)).process(call.data)
+            if not result and key:
+                bot.edit_message_text(
+                    f"Выберите {LSTEP[step]}",
+                    call.message.chat.id,
+                    call.message.message_id,
+                    reply_markup=key,
+                )
+            elif result:
                 bot.send_message(
                     call.message.chat.id,
                     f"Вы выбрали дату заезда: {result}",
@@ -187,19 +191,31 @@ def query_handler(call):
                 calendar, step = DetailedTelegramCalendar(
                     calendar_id=action + 1,
                     locale="ru",
-                    min_date=date_limit,
+                    min_date=date_limit + datetime.timedelta(days=1),
                     max_date=date_limit + datetime.timedelta(days=365 * 2)).build()
                 bot.send_message(
                     call.message.chat.id,
                     f"Выберите дату выезда: {LSTEP[step]}",
                     reply_markup=calendar,
                 )
-            else:
+        else:
+            result, key, step = DetailedTelegramCalendar(
+                calendar_id=action,
+                locale="ru",
+                min_date=date_limit + datetime.timedelta(days=1),
+                max_date=date_limit + datetime.timedelta(days=365 * 2)).process(call.data)
+            if not result and key:
+                bot.edit_message_text(
+                    f"Выберите {LSTEP[step]}",
+                    call.message.chat.id,
+                    call.message.message_id,
+                    reply_markup=key,
+                )
+            elif result:
                 bot.send_message(
                     call.message.chat.id,
-                    f"Вы выбрали дату выеза: {result}",
+                    f"Вы выбрали дату выезда: {result}",
                 )
-
                 if user.date_in < result:
                     update(
                         db, User, User.chat_id == call.message.chat.id, {"action": 5, "date_out": result}
@@ -243,7 +259,7 @@ def query_handler(call):
         bot.edit_message_media(
             message_id=call.message.message_id,
             chat_id=call.message.chat.id,
-            media=types.InputMediaPhoto(hotel["photos"][0]),
+            media=InputMediaPhoto(hotel["photos"][0]),
         )
         bot.edit_message_caption(
             message_id=call.message.message_id,
@@ -270,7 +286,7 @@ def query_handler(call):
         bot.edit_message_media(
             message_id=call.message.message_id,
             chat_id=call.message.chat.id,
-            media=types.InputMediaPhoto(hotel["photos"][photo_number]),
+            media=InputMediaPhoto(hotel["photos"][photo_number]),
         )
         bot.edit_message_caption(
             message_id=call.message.message_id,

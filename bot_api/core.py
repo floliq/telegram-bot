@@ -1,14 +1,5 @@
 from typing import *
-
-from api.core import (
-    api,
-    url,
-    headers,
-    get_hotels,
-)
 from telebot.types import (
-    Message,
-    CallbackQuery,
     InlineKeyboardMarkup,
     InlineKeyboardButton,
 )
@@ -41,17 +32,16 @@ def hotel_card_keygen(list_of_data: List[Dict], list_of_photos: List, url: str, 
         )
     if card_index == 0 and len(list_of_data) > (card_index + 1):
         keyboard.add(
-            InlineKeyboardButton("Вперёд ➡️", callback_data="card" + str(card_index + 1))
+            InlineKeyboardButton("Вперёд ➡️", callback_data='card{}'.format(card_index + 1))
         )
     elif card_index == len(list_of_data) - 1:
         keyboard.add(
-            InlineKeyboardButton("⬅️ Назад", callback_data="card" + str(card_index - 1))
+            InlineKeyboardButton("⬅️ Назад", callback_data='card{}'.format(card_index + 1))
         )
     else:
         keyboard.row(
-            InlineKeyboardButton("⬅️ Назад", callback_data="card" + str(card_index - 1)),
-            InlineKeyboardButton("Вперёд ➡️", callback_data="card" + str(card_index + 1)),
+            InlineKeyboardButton("⬅️ Назад", callback_data='card{}'.format(card_index + 1)),
+            InlineKeyboardButton("Вперёд ➡️", callback_data='card{}'.format(card_index + 1)),
         )
     return keyboard
 
-# api.core все запросы там
