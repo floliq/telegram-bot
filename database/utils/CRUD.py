@@ -21,10 +21,10 @@ def _updating_row(db: db, model: T, condition: ModelBase, *data: List[Dict]) -> 
         model.update(*data).execute()
 
 
-def _check_if_data_exists(sdb: db, model: T, *query: Any, **filters: Any) -> bool:
+def _check_if_data_exists(db: db, model: T, *query: Any, **filters: Any) -> bool:
     exists = True
     try:
-        with sdb.atomic():
+        with db.atomic():
             instance = model.get_or_none(*query, **filters)
             if instance is None:
                 exists = False

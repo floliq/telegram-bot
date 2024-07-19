@@ -9,7 +9,7 @@ def _make_response(
     headers: Dict,
     params: Dict,
     timeout: int,
-    success=200
+    success=200,
 ):
     # url = ("{}/v1/hotels/"+keyword).format(url)
     response = requests.request(
@@ -20,8 +20,6 @@ def _make_response(
     if status_code == success:
         return response
     return status_code
-
-
 
 
 def _search_location(
@@ -99,6 +97,7 @@ class APIInterface:
     @staticmethod
     def make_response():
         return _make_response
+
     @staticmethod
     def get_location():
         return _search_location
