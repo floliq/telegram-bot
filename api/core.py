@@ -1,3 +1,5 @@
+from typing import Tuple
+
 from config.config import Settings
 from api.utils.api_handler import APIInterface
 
@@ -12,21 +14,32 @@ url = "https://" + settings.host_api
 api = APIInterface()
 
 
-def get_location_ides(city: str):
+def get_location_ids(city: str):
     """
     Получение городов
     """
     find_city = api.get_location()
     params = {"name": city, "locale": "ru"}
-    response = find_city("GET", url, headers, params, 5).json()
+    # "locations",
+    response = find_city("GET", url, headers, params, 3)
+    try:
+        response = response.json()
+    except AttributeError:
+        return []
     locations = dict()
     for location in response:
         locations[location["dest_id"]] = location["label"]
     return locations
 
 
-# def get_hotels(dest_id, adults_count: int, checkin, checkout, filter_mode: str = 'popularity'):
-def get_hotels(dest_id, filter_mode: str = "popularity"):
+def get_hotels(
+    dest_id,
+    checkin,
+    checkout,
+    person_count,
+    limits: Tuple[int, int],
+    filter_mode: str = "popularity",
+):
     """
     Получения наиболее популярных отелей
     popularity - наиболее популярные
@@ -35,8 +48,7 @@ def get_hotels(dest_id, filter_mode: str = "popularity"):
     """
     find_hotels = api.get_best_hotel()
     params = {
-        "checkout_date": "2024-09-15",
-        # "checkout_date": checkout,
+        "checkout_date": str(checkout),
         "order_by": filter_mode,
         "filter_by_currency": "USD",
         "include_adjacency": "true",
@@ -44,16 +56,18 @@ def get_hotels(dest_id, filter_mode: str = "popularity"):
         "room_number": "1",
         "dest_id": dest_id,
         "dest_type": "city",
-        "adults_number": "2",
+        "adults_number": person_count,
         "page_number": "0",
-        "checkin_date": "2024-09-14",
-        # "checkin_date": checkin,
+        "checkin_date": str(checkin),
         "locale": "ru",
         "units": "metric",
     }
-    response = find_hotels("GET", url, headers, params, 20)
-    response = response.json()["result"]
-    # print(response)
+    print(params)
+    response = find_hotels("GET", url, headers, params, 5)
+    try:
+        response = response.json()["result"]
+    except AttributeError:
+        return []
     hotels = []
     for hotel in response:
         hotels.append(
@@ -63,40 +77,31 @@ def get_hotels(dest_id, filter_mode: str = "popularity"):
                 "url": hotel["url"],
                 "description": hotel_desc(hotel["hotel_id"]),
                 "price": round(float(hotel["min_total_price"]), 2),
-                "photo": hotel["main_photo_url"],
+                "photos": hotel_photos(hotel["hotel_id"]),
                 "address": hotel["address_trans"],
                 "distance_to_cc": hotel["distance_to_cc"],
                 "coordinates": [hotel["latitude"], hotel["longitude"]],
+                "city": hotel["city_trans"],
+                "checkin": str(checkin),
+                "checkout": str(checkout),
             }
         )
-    # hotels = [hotel["hotel_name_trans"] for hotel in response["result"]]
-    # hotels = {hotel["hotel_id"]: round(float(hotel["min_total_price"]), 2) for hotel in response["result"]}
+    min_price, max_price = limits
+    hotels = [hotel for hotel in hotels if min_price < hotel["price"] < max_price]
     return hotels
 
 
-def hotel_info(dest_id):
-    """
-    Получение названия, ссылки, адреса и локации отеля
-    """
-    info_hotel = api.get_hotel_info()
-    params = {"hotel_id": dest_id, "locale": "ru"}
-    response = info_hotel("GET", url, headers, params, 5)
-    response = response.json()
-    name = response["name"]
-    link = response["url"]
-    address = response["address"]
-    location = [locate for locate in response["location"].values()]
-    return name, link, address, location
-
-
-def hotel_photos(dest_id):
+def hotel_photos(hotel_id):
     """
     Получение фотографий отеля
     """
     photos_hotel = api.get_hotel_photo()
-    params = {"hotel_id": dest_id, "locale": "ru"}
+    params = {"hotel_id": hotel_id, "locale": "ru"}
     response = photos_hotel("GET", url, headers, params, 5)
-    response = response.json()
+    try:
+        response = response.json()
+    except AttributeError:
+        return []
     photos_urls = [pic["url_max"] for pic in response]
     return photos_urls
 
@@ -107,28 +112,17 @@ def hotel_desc(hotel_id):
     """
     desc_hotel = api.get_hotel_desc()
     params = {"hotel_id": hotel_id, "locale": "ru"}
-    response = desc_hotel("GET", url, headers, params, 10)
-    response = response.json()
+    response = desc_hotel("GET", url, headers, params, 3)
+    try:
+        response = response.json()
+    except AttributeError:
+        return []
     return response["description"]
-
-
-def get_all_hotel_info(hotel_id, data):
-    """
-    Получение полной информации об отеле
-    """
-    name, link, address, location = hotel_info(hotel_id)
-    min_price = data[hotel_id]
-    photos = hotel_photos(hotel_id)
-    desc = hotel_desc(hotel_id)
-    return name, link, address, location, min_price, photos, desc
 
 
 if __name__ == "__main__":
     api()
-    get_location_ides()
+    get_location_ids()
     get_hotels()
-    hotel_info()
     hotel_photos()
     hotel_desc()
-    get_all_hotel_info()
-
